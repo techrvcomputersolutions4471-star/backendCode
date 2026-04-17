@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  category    String   // laptop | desktop | printer
+  processor   String?
+  ram         String?
+  storage     String?
+  displaySize String?
+  os          String?
+  price       Int
+  condition   String   // refurbished | new
+  grade       String?  // A | B | C
+  description String?
+  images      String[] // array of Cloudinary URLs
+  isVisible   Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Enquiry {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  deviceType  String?
+  issue       String?
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
