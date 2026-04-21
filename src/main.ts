@@ -1,36 +1,62 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { AppModule } from './app.module'
+
+function getAllowedOrigins() {
+  const defaults = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://adorable-bublanina-814577.netlify.app',
+  ]
+
+  const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+  return new Set([...defaults, ...configuredOrigins])
+}
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule)
+  const allowedOrigins = getAllowedOrigins()
+  const allowedOriginPatterns = [/^https:\/\/[a-z0-9-]+\.netlify\.app$/i]
 
-  // Global prefix for all routes
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api')
 
-  // ✅ Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        allowedOrigins.has(origin) ||
+        allowedOriginPatterns.some((pattern) => pattern.test(origin))
+      ) {
+        callback(null, true)
+        return
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS`), false)
+    },
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  });
+  })
 
-  // Validation pipe
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe())
 
-  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('TechRV API')
     .setDescription('TechRV Computer Solutions Backend API')
     .setVersion('1.0')
     .addBearerAuth()
-    .build();
+    .build()
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('swagger', app, document)
 
-  await app.listen(3000);
+  const port = Number(process.env.PORT) || 3000
+  await app.listen(port)
 }
-bootstrap();
+
+bootstrap()
