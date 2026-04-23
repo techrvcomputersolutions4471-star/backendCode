@@ -7,7 +7,7 @@ function getAllowedOrigins() {
   const defaults = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://adorable-bublanina-814577.netlify.app',
+    'https://techrvbusiness.vercel.app',
   ]
 
   const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
